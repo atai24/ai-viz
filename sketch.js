@@ -1,6 +1,9 @@
+var w = window.innerWidth;
+var h = window.innerHeight;  
+
 let cap;
 function setup() {
-  createCanvas(400, 400);
+  createCanvas(w, h);
   cap = createCapture(VIDEO);
   cap.hide();
   rectMode(CENTER);
