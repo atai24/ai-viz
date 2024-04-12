@@ -1,35 +1,87 @@
-var w = window.innerWidth;
-var h = window.innerHeight; 
+var mic, soundFile;
+var fft;
+var smoothing = 0.8;
+var binCount = 1024;
+var particles = new Array(binCount);
 
-let cap;
 function setup() {
-  createCanvas(w, h);
-  cap = createCapture(VIDEO);
-  cap.hide();
+  c = createCanvas(windowWidth, windowHeight);
   noStroke();
-  fill(0);
+
+  //soundFile = createAudio('../../music/Broke_For_Free_-_01_-_As_Colorful_As_Ever.mp3');
+  mic = new p5.AudioIn();
+  mic.start();
+
+  fft = new p5.FFT(smoothing, binCount);
+  fft.setInput(mic);
+
+  for (var i = 0; i < particles.length; i++) {
+    var position = createVector(random(width), random(height));
+    particles[i] = new Particle(position);
+  }
 }
-let time = 0;
+
 function draw() {
-  background(255);
-  cap.loadPixels();
-  // Use sin() to create a pulsating effect for stepSize between 6 and 10
-  const stepSize = round(map(sin(time), -1, 1, 6, 10));
-  // Calculate scale factors using the updated variables
-  const scaleX = w / cap.width;
-  const scaleY = h / cap.height;
-  for (let y = 0; y < cap.height; y += stepSize) {
-    for (let x = 0; x < cap.width; x += stepSize) {
-      const i = (y * cap.width + x) * 4;
-      // Generate a random color within reason by slightly altering the original color
-      const r = cap.pixels[i] + random(-20, 20);
-      const g = cap.pixels[i + 1] + random(-20, 20);
-      const b = cap.pixels[i + 2] + random(-20, 20);
-      fill(r, g, b);
-      // Generate a random radius for the ellipse within a reasonable range
-      const radius = random(stepSize * 0.5, stepSize * 1.5);
-      // Scale the drawing positions and size to fill the screen using the updated variables
-      ellipse(x * scaleX, y * scaleY, radius * scaleX, radius * scaleY);
-    }
+  background(0, 0, 0, 100);
+  var spectrum = fft.analyze(binCount);
+
+  for (var i = 0; i < binCount; i++) {
+    var thisLevel = map(spectrum[i], 0, 255, 0, 1);
+    particles[i].update(thisLevel);
+    particles[i].draw();
+  }
+}
+
+var Particle = function(position) {
+  this.position = position;
+  this.scale = random(0, 1);
+  this.speed = random(1,10); //p5.Vector.random2D().mult(random(1, 5));
+  this.color = [random(0, 255), random(0, 255), random(0, 255)];
+}
+
+Particle.prototype.update = function(someLevel) {
+  //this.position.add(this.speed.mult(someLevel));
+  // change color 1% of the time
+  if (Math.random() < 0.01) {
+    // This line executes approximately 10% of the time the function is called
+    this.color = [random(0, 255), random(0, 255), random(0, 255)];
+  }
+
+  if(this.position.x + this.speed > windowWidth || this.position.x + this.speed < 0){
+    this.speed = -this.speed;
+  }
+  this.position.x = (this.position.x + this.speed);
+  //this.position.y = (this.position.y + 5);
+  this.diameter = map(someLevel, 0, 1, 0, 100) * this.scale;
+}
+
+Particle.prototype.draw = function() {
+  fill(this.color);
+  ellipse(
+    this.position.x, this.position.y,
+    this.diameter, this.diameter
+  );
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  background(0);
+}
+
+function keyPressed() {
+  if (key == 'T') {
+    toggleInput();
+  }
+}
+
+function toggleInput() {
+  if (soundFile.isPlaying()) {
+    soundFile.pause();
+    mic.start();
+    fft.setInput(mic);
+  } else {
+    soundFile.play();
+    mic.stop();
+    fft.setInput(soundFile);
   }
 }
