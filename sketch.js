@@ -1,62 +1,85 @@
 var mic, soundFile;
-var fft;
-var smoothing = 0.8;
+var fft, amplitude;
+var smoothing = 0.9;
 var binCount = 1024;
 var particles = new Array(binCount);
 
 function setup() {
-  c = createCanvas(windowWidth, windowHeight);
+  c = createCanvas(window.innerWidth, window.innerHeight);
   noStroke();
 
-  //soundFile = createAudio('../../music/Broke_For_Free_-_01_-_As_Colorful_As_Ever.mp3');
+  soundFile = loadSound('./media/dreams.mp3');
   mic = new p5.AudioIn();
+  console.log(mic.getSources())
   mic.start();
-
+  // mic.amp(0.2);
+  // soundFile.amp(0.2);
   fft = new p5.FFT(smoothing, binCount);
   fft.setInput(mic);
+  
 
   for (var i = 0; i < particles.length; i++) {
-    var position = createVector(random(width), random(height));
+    var position = createVector(random(width), random(height+500), i);
     particles[i] = new Particle(position);
   }
 }
 
 function draw() {
-  background(0, 0, 0, 100);
+  let energy=[fft.getEnergy("bass"), fft.getEnergy("lowMid"), fft.getEnergy("mid"), fft.getEnergy("highMid"), fft.getEnergy("treble")]
+  background(energy[0], energy[1], energy[2], 50);
   var spectrum = fft.analyze(binCount);
 
   for (var i = 0; i < binCount; i++) {
-    var thisLevel = map(spectrum[i], 0, 255, 0, 1);
-    particles[i].update(thisLevel);
+    particles[i].update(i, spectrum[i]);
     particles[i].draw();
+  }
+  // DEBUG
+  fill(255)
+  rect(0, 0, 100, 200)
+  for(let i = 0; i<energy.length; i++){
+    strokeWeight(10)
+    stroke(0)
+    point(i*10+20, 175-energy[i])
   }
 }
 
 var Particle = function(position) {
   this.position = position;
-  this.scale = random(0, 1);
-  this.speed = random(1,10); //p5.Vector.random2D().mult(random(1, 5));
+  this.speedScale = 1 // how fast particles move
+  this.scale = random(0, 0.5); // how big or small particles are
+  this.yScale = random(0, 0.01); // more or less vertical movement
   this.color = [random(0, 255), random(0, 255), random(0, 255)];
+  this.colorScale = random(0,1);
 }
 
-Particle.prototype.update = function(someLevel) {
-  //this.position.add(this.speed.mult(someLevel));
-  // change color 1% of the time
-  if (Math.random() < 0.01) {
-    // This line executes approximately 10% of the time the function is called
-    this.color = [random(0, 255), random(0, 255), random(0, 255)];
+Particle.prototype.update = function(frequency, level) {
+  var warm = map(frequency, 0, 1024, 255, 0)
+  var cool = map(frequency, 0, 1024, 0, 255)
+  if(level*scale > 50){
+    this.colorScale = -this.colorScale
   }
-
+  this.color[0] = warm*this.colorScale
+  this.color[1] = level*this.colorScale
+  this.color[2] = cool*this.colorScale
+  if (level * this.scale < 20) {
+    this.position.z = 500
+  }
   if(this.position.x + this.speed > windowWidth || this.position.x + this.speed < 0){
-    this.speed = -this.speed;
+    this.speedScale = -this.speedScale
   }
-  this.position.x = (this.position.x + this.speed);
-  //this.position.y = (this.position.y + 5);
-  this.diameter = map(someLevel, 0, 1, 0, 100) * this.scale;
+  this.speed = map(level, 0, 255, 1, 10)*this.speedScale
+  this.position.x = this.position.x + this.speed
+  this.position.y = this.position.y - level*this.yScale
+  if (!onScreen(this.position)) {
+    this.position.x = random(width);
+    this.position.y = random(height)
+  }
+  this.diameter = level * this.scale;
 }
 
 Particle.prototype.draw = function() {
   fill(this.color);
+  noStroke()
   ellipse(
     this.position.x, this.position.y,
     this.diameter, this.diameter
@@ -84,4 +107,8 @@ function toggleInput() {
     mic.stop();
     fft.setInput(soundFile);
   }
+}
+
+function onScreen(v) {
+  return v.x >= 0 && v.x <= width && v.y >= 0 && v.y <= height;
 }
