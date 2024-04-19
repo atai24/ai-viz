@@ -26,7 +26,7 @@ function setup() {
 
 function draw() {
   let energy=[fft.getEnergy("bass"), fft.getEnergy("lowMid"), fft.getEnergy("mid"), fft.getEnergy("highMid"), fft.getEnergy("treble")]
-  background(energy[0], energy[1], energy[2], 50);
+  background(energy[0], energy[1], energy[2], 10);
   var spectrum = fft.analyze(binCount);
 
   for (var i = 0; i < binCount; i++) {
@@ -47,9 +47,9 @@ var Particle = function(position) {
   this.position = position;
   this.speedScale = 1 // how fast particles move
   this.scale = random(0, 0.5); // how big or small particles are
-  this.yScale = random(0, 0.01); // more or less vertical movement
+  this.yScale = random(0, 0.5); // more or less vertical movement
   this.color = [random(0, 255), random(0, 255), random(0, 255)];
-  this.colorScale = random(0,1);
+  this.colorScale = random(0,5);
 }
 
 Particle.prototype.update = function(frequency, level) {
