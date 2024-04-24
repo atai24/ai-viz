@@ -13,6 +13,7 @@ function setup() {
   mic = new p5.AudioIn();
   console.log(mic.getSources())
   mic.start();
+  getAudioContext().resume()
   // mic.amp(0.2);
   // soundFile.amp(0.2);
   fft = new p5.FFT(smoothing, binCount);
