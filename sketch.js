@@ -3,6 +3,7 @@ var fft, amplitude;
 var smoothing = 0.9;
 var binCount = 1024;
 var particles = new Array(binCount);
+var qrcode;
 
 function setup() {
   c = createCanvas(window.innerWidth, window.innerHeight);
@@ -16,12 +17,14 @@ function setup() {
   // soundFile.amp(0.2);
   fft = new p5.FFT(smoothing, binCount);
   fft.setInput(mic);
-  
+
 
   for (var i = 0; i < particles.length; i++) {
     var position = createVector(random(width), random(height+500), i);
     particles[i] = new Particle(position);
   }
+
+  qrcode = loadImage('./media/Seeing_Sound_Demo_small.png')
 }
 
 function draw() {
@@ -33,14 +36,18 @@ function draw() {
     particles[i].update(i, spectrum[i]);
     particles[i].draw();
   }
+
+  // QR CODE
+  image(qrcode, window.innerWidth-qrcode.width/3, window.innerHeight-qrcode.height/3, qrcode.width/3, qrcode.height/3)
+
   // DEBUG
-  fill(255)
-  rect(0, 0, 100, 200)
-  for(let i = 0; i<energy.length; i++){
-    strokeWeight(10)
-    stroke(0)
-    point(i*10+20, 175-energy[i])
-  }
+  // fill(255)
+  // rect(0, 0, 100, 200)
+  // for(let i = 0; i<energy.length; i++){
+  //   strokeWeight(10)
+  //   stroke(0)
+  //   point(i*10+20, 175-energy[i])
+  // }
 }
 
 var Particle = function(position) {
@@ -111,4 +118,11 @@ function toggleInput() {
 
 function onScreen(v) {
   return v.x >= 0 && v.x <= width && v.y >= 0 && v.y <= height;
+}
+
+function mousePressed() {
+  if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
+    let fs = fullscreen();
+    fullscreen(!fs);
+  }
 }
