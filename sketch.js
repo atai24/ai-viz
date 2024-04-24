@@ -5,6 +5,7 @@ var binCount = 1024;
 var particles = new Array(binCount);
 var qrcode;
 let audioStarted = false;
+let mobileDevice = false;
 
 function setup() {
   c = createCanvas(window.innerWidth, window.innerHeight);
@@ -27,6 +28,17 @@ function setup() {
     particles[i] = new Particle(position);
   }
 
+  let details = navigator.userAgent;
+
+  /* Creating a regular expression 
+  containing some mobile devices keywords 
+  to search it in details string*/
+  let regexp = /android|iphone|kindle|ipad/i;
+
+  /* Using test() method to search regexp in details
+  it returns boolean value*/
+  mobileDevice = regexp.test(details);
+
   qrcode = loadImage('./media/Seeing_Sound_Demo_small.png')
 }
 
@@ -41,7 +53,14 @@ function draw() {
   }
 
   // QR CODE
-  image(qrcode, window.innerWidth-qrcode.width/3, window.innerHeight-qrcode.height/3, qrcode.width/3, qrcode.height/3)
+  if (!mobileDevice) {
+    image(qrcode, window.innerWidth-qrcode.width/3, window.innerHeight-qrcode.height/3, qrcode.width/3, qrcode.height/3)
+  }
+  if (!audioStarted) {
+    textSize(32)
+    fill(255)
+    text("Tap to begin...", window.innerWidth/2, window.innerHeight/2)
+  }
 
   // DEBUG
   // fill(255)
