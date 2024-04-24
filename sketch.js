@@ -4,16 +4,18 @@ var smoothing = 0.9;
 var binCount = 1024;
 var particles = new Array(binCount);
 var qrcode;
+let audioStarted = false;
 
 function setup() {
   c = createCanvas(window.innerWidth, window.innerHeight);
   noStroke();
 
+  getAudioContext().suspend();
+
   soundFile = loadSound('./media/dreams.mp3');
   mic = new p5.AudioIn();
   console.log(mic.getSources())
   mic.start();
-  getAudioContext().resume()
   // mic.amp(0.2);
   // soundFile.amp(0.2);
   fft = new p5.FFT(smoothing, binCount);
@@ -122,7 +124,12 @@ function onScreen(v) {
 }
 
 function mousePressed() {
-  if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
+    // Start audio on user gesture
+    if (!audioStarted) {
+      userStartAudio();
+      audioStarted = true;
+  }
+    if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
     let fs = fullscreen();
     fullscreen(!fs);
   }
