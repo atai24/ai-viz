@@ -59,7 +59,7 @@ function draw() {
   if (!audioStarted) {
     textSize(32)
     fill(255)
-    text("Tap to begin...", window.innerWidth/2, window.innerHeight/2)
+    text("Tap to begin...", window.innerWidth/2-100, window.innerHeight/2)
   }
 
   // DEBUG
